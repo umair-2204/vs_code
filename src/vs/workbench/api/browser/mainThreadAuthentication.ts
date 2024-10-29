@@ -210,7 +210,12 @@ export class MainThreadAuthentication extends Disposable implements MainThreadAu
 			this._removeAccountPreference(extensionId, providerId, scopes);
 		}
 
-		const matchingAccountPreferenceSession = this._getAccountPreference(extensionId, providerId, scopes, sessions);
+		const matchingAccountPreferenceSession =
+			// If an account was passed in, that takes precedence over the account preference
+			options.account
+				// We only support one session per account per set of scopes so grab the first one here
+				? sessions[0]
+				: this._getAccountPreference(extensionId, providerId, scopes, sessions);
 
 		// Check if the sessions we have are valid
 		if (!options.forceNewSession && sessions.length) {
@@ -262,7 +267,7 @@ export class MainThreadAuthentication extends Disposable implements MainThreadAu
 		}
 
 		// For the silent flows, if we have a session but we don't have a session preference, we'll return the first one that is valid.
-		if (!matchingAccountPreferenceSession) {
+		if (!matchingAccountPreferenceSession && !this.authenticationExtensionsService.getAccountPreference(extensionId, providerId)) {
 			const validSession = sessions.find(session => this.authenticationAccessService.isAccessAllowed(providerId, session.account.label, extensionId));
 			if (validSession) {
 				return validSession;
@@ -285,7 +290,7 @@ export class MainThreadAuthentication extends Disposable implements MainThreadAu
 
 		if (session) {
 			this.sendProviderUsageTelemetry(extensionId, providerId);
-			this.authenticationUsageService.addAccountUsage(providerId, session.account.label, extensionId, extensionName);
+			this.authenticationUsageService.addAccountUsage(providerId, session.account.label, scopes, extensionId, extensionName);
 		}
 
 		return session;
