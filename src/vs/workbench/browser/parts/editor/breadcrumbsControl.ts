@@ -95,6 +95,10 @@ class OutlineItem extends BreadcrumbsItem {
 			filterData: undefined
 		}, 0, template, undefined);
 
+		if (!this.options.showSymbolIcons) {
+			template.iconClass.className = '';
+		}
+
 		this._disposables.add(toDisposable(() => { renderer.disposeTemplate(template); }));
 	}
 
