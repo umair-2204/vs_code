@@ -27,7 +27,7 @@ interface OrganizeImportsCommandMetadata {
 
 const organizeImportsCommand: OrganizeImportsCommandMetadata = {
 	commandIds: [], // We use the generic 'Organize imports' command
-	title: vscode.l10n.t("Organize Imports"),
+	title: vscode.l10n.t("Optimize Imports"),
 	kind: vscode.CodeActionKind.SourceOrganizeImports,
 	mode: OrganizeImportsMode.All,
 };
