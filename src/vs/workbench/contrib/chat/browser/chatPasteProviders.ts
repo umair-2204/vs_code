@@ -17,6 +17,8 @@ import { Codicon } from '../../../../base/common/codicons.js';
 import { localize } from '../../../../nls.js';
 import { IChatRequestVariableEntry } from '../common/chatModel.js';
 import { IExtensionService, isProposedApiEnabled } from '../../../services/extensions/common/extensions.js';
+import { IUndoRedoService, UndoRedoElementType } from '../../../../platform/undoRedo/common/undoRedo.js';
+
 
 export class PasteImageProvider implements DocumentPasteEditProvider {
 
@@ -25,7 +27,8 @@ export class PasteImageProvider implements DocumentPasteEditProvider {
 	public readonly pasteMimeTypes = ['image/*'];
 	constructor(
 		private readonly chatWidgetService: IChatWidgetService,
-		private readonly extensionService: IExtensionService
+		private readonly extensionService: IExtensionService,
+		private readonly undoRedoService: IUndoRedoService
 	) { }
 
 	async provideDocumentPasteEdits(_model: ITextModel, _ranges: readonly IRange[], dataTransfer: IReadonlyVSDataTransfer, context: DocumentPasteContext, token: CancellationToken): Promise<DocumentPasteEditsSession | undefined> {
@@ -89,6 +92,19 @@ export class PasteImageProvider implements DocumentPasteEditProvider {
 
 		widget.attachmentModel.addContext(imageContext);
 
+		this.undoRedoService.pushElement({
+			type: UndoRedoElementType.Resource,
+			resource: _model.uri,
+			label: tempDisplayName,
+			code: 'pasteImage',
+			undo: () => {
+				widget.attachmentModel.delete(imageContext.id);
+			},
+			redo: () => {
+				widget.attachmentModel.addContext(imageContext);
+			}
+		});
+
 		return;
 	}
 }
@@ -140,9 +156,10 @@ export class ChatPasteProvidersFeature extends Disposable {
 	constructor(
 		@ILanguageFeaturesService languageFeaturesService: ILanguageFeaturesService,
 		@IChatWidgetService chatWidgetService: IChatWidgetService,
-		@IExtensionService extensionService: IExtensionService
+		@IExtensionService extensionService: IExtensionService,
+		@IUndoRedoService undoRedoService: IUndoRedoService
 	) {
 		super();
-		this._register(languageFeaturesService.documentPasteEditProvider.register({ scheme: ChatInputPart.INPUT_SCHEME, pattern: '*', hasAccessToAllModels: true }, new PasteImageProvider(chatWidgetService, extensionService)));
+		this._register(languageFeaturesService.documentPasteEditProvider.register({ scheme: ChatInputPart.INPUT_SCHEME, pattern: '*', hasAccessToAllModels: true }, new PasteImageProvider(chatWidgetService, extensionService, undoRedoService)));
 	}
 }
