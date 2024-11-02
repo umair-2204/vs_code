@@ -221,8 +221,8 @@ export class OrganizeImportsAction extends EditorAction {
 	constructor() {
 		super({
 			id: organizeImportsCommandId,
-			label: nls.localize('organizeImports.label', "Organize Imports"),
-			alias: 'Organize Imports',
+			label: nls.localize('organizeImports.label', "Optimize Imports"),
+			alias: 'Optimize Imports',
 			precondition: ContextKeyExpr.and(
 				EditorContextKeys.writable,
 				contextKeyForSupportedActions(CodeActionKind.SourceOrganizeImports)),
